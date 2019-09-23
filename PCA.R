@@ -12,28 +12,31 @@ getwd()
 # 1. Generation test dataset
 test_dataset <- matrix(nrow=100, ncol=10)
 
-data.matrix <- test_dataset
-colnames(data.matrix) <- c(
+test_matrix <- test_dataset
+colnames(test_matrix) <- c(
   paste("wt",1:5,sep=""),
   paste("ko",1:5,sep=""))
-rownames(data.matrix) <- paste("gene", 1:100, sep="")
+rownames(test_matrix) <- paste("gene", 1:100, sep="")
 for (i in 1:100){
   wt.values <- rpois(5, lambda = sample(x=10:1000, size=1))
   ko.values <- rpois(5, lambda = sample(x=10:1000, size=1))
   
-  data.matrix[i,] <- c(wt.values, ko.values)
+  test_matrix[i,] <- c(wt.values, ko.values)
 }
 
-head(data.matrix)
+head(test_matrix)
 
-# 2. Calculate PCA
-pca <- prcomp(t(data.matrix),scale=TRUE)
+# If you have data for PCA analysis 
+# Plaease Transform your data into type same to test_matrix
+
+
+# 2. First PCA methods: Traditional Methods
+pca <- prcomp(t(test_matrix),scale=TRUE)
 plot(pca)
 pca.var <- pca$sdev^2
 pca.var.per <- round(pca.var/sum(pca.var)*100,1)
 
 # 3. Calcualte loading scores
-
 loading_score <- pca$rotation[,1]
 # prcomp() calcuate results inclding loading score, namely, rotation term
 
@@ -81,6 +84,38 @@ ggsave("PCA.pdf",
        dpi = 300,
        limitsize = FALSE
        )
+
+#######################################################
+#######################################################
+### Second PCA method using another R package
+# install.packages("FactoMineR")
+library(FactoMineR)
+library(factoextra)
+
+test_matrix <- test_matrix
+result_pca <- PCA(t(test_matrix),scale.unit = T,graph = F)
+
+# Extract eigen
+result_eigen <- get_eig(result_pca)
+
+# Plot eigen
+fviz_screeplot(result_pca, addlabels = TRUE, ylim = c(0, 50))
+fviz_pca_var(result_pca,
+col.var = "cos2", 
+gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+repel = TRUE)
+
+fviz_pca_ind(result_pca, col.ind = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE)
+
+fviz_pca_biplot(result_pca, repel = TRUE)
+
+library(RColorBrewer)
+
+fviz_pca_ind(result_pca, 
+             palette = c("#E7B800", "#FC4E07"),
+             addEllipses = TRUE)
 
 
 
